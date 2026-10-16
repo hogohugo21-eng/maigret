@@ -780,7 +780,7 @@ files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {dev = "platform_system == \"Windows\" or sys_platform == \"win32\""}
+markers = {dev = "sys_platform == \"win32\" or platform_system == \"Windows\""}
 
 [[package]]
 name = "coverage"
@@ -3485,6 +3485,22 @@ docs = ["myst-parser", "pydata-sphinx-theme", "sphinx"]
 test = ["argcomplete (>=3.0.3)", "mypy (>=1.7.0)", "pre-commit", "pytest (>=7.0,<8.2)", "pytest-mock", "pytest-mypy-testing"]
 
 [[package]]
+name = "trustme"
+version = "1.2.1"
+description = "#1 quality TLS certs while you wait, for the discerning tester"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "trustme-1.2.1-py3-none-any.whl", hash = "sha256:d768e5fc57c86dfc5ec9365102e9b092541cd6954b35d8c1eea01a84f35a762a"},
+    {file = "trustme-1.2.1.tar.gz", hash = "sha256:6528ba2bbc7f2db41f33825c8dd13e3e3eb9d334ba0f909713c8c3139f4ae47f"},
+]
+
+[package.dependencies]
+cryptography = ">=3.1"
+idna = ">=2.0"
+
+[[package]]
 name = "tuna"
 version = "0.5.15"
 description = "Visualize Python performance profiles"
@@ -3816,4 +3832,4 @@ pdf = ["arabic-reshaper", "python-bidi", "xhtml2pdf"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "efc71ed2a7d16be373e90e10a4a242e4e02d1e198af8aa4d06488ab52a6acb21"
+content-hash = "4d3c0509a71e85421c2f125dc1c666c5486ba38ec3c274b4a5953ac45ed3a834"

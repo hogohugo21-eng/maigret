@@ -36,7 +36,6 @@ from maigret.report import (
     MaigretGraph,
     _build_maigret_graph,
     _graph_to_cypher,
-    _is_safe_report_image_url,
     _pdf_report_link_callback,
     _BLANK_IMAGE_PATH,
     _normalize_xmind_archive,
@@ -1014,7 +1013,7 @@ def test_is_safe_report_image_url_rejects_dangerous():
         42,
     ]
     for value in bad:
-        assert _is_safe_report_image_url(value) is False, value
+        assert _pdf_report_link_callback(value, "") == _BLANK_IMAGE_PATH, value
 
 
 def test_is_safe_report_image_url_rejects_non_global_ranges():
@@ -1035,13 +1034,13 @@ def test_is_safe_report_image_url_rejects_non_global_ranges():
         "http://[::ffff:169.254.169.254]/a.png",
     ]
     for value in bad:
-        assert _is_safe_report_image_url(value) is False, value
+        assert _pdf_report_link_callback(value, "") == _BLANK_IMAGE_PATH, value
 
 
-def test_is_safe_report_image_url_allows_public_hosts():
+def test_pdf_resources_reject_public_hosts_too():
     # IP literals resolve without DNS, so this stays offline and deterministic.
-    assert _is_safe_report_image_url("https://1.1.1.1/avatar.png") is True
-    assert _is_safe_report_image_url("http://8.8.8.8/avatar.png") is True
+    assert _pdf_report_link_callback("https://1.1.1.1/avatar.png", "") == _BLANK_IMAGE_PATH
+    assert _pdf_report_link_callback("http://8.8.8.8/avatar.png", "") == _BLANK_IMAGE_PATH
 
 
 def test_pdf_link_callback_diverts_unsafe_to_local_blank():
@@ -1052,9 +1051,9 @@ def test_pdf_link_callback_diverts_unsafe_to_local_blank():
     assert (
         _pdf_report_link_callback("http://169.254.169.254/x", "") == _BLANK_IMAGE_PATH
     )
-    # Safe public URLs pass through unchanged.
+    # Public URLs could redirect or rebind to private addresses.
     url = "https://1.1.1.1/a.png"
-    assert _pdf_report_link_callback(url, "") == url
+    assert _pdf_report_link_callback(url, "") == _BLANK_IMAGE_PATH
 
 
 def test_pdf_report_does_not_fetch_unsafe_image(tmp_path):

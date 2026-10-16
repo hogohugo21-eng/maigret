@@ -18,6 +18,7 @@ import uuid
 from datetime import datetime
 from threading import Thread
 from typing import Any, Dict
+from urllib.parse import urlsplit
 import maigret
 import maigret.settings
 from maigret.checking import build_cloudflare_bypass_config
@@ -28,6 +29,33 @@ from maigret.report import generate_report_context
 app = Flask(__name__)
 # Use environment variable for secret key, generate random one if not set
 app.secret_key = os.getenv('FLASK_SECRET_KEY', os.urandom(24).hex())
+
+
+@app.before_request
+def reject_cross_origin_writes():
+    """Protect the local UI from cross-site forms and fetches.
+
+    Non-browser clients without origin metadata remain supported. This is
+    not authentication: the web UI must remain on a trusted local interface.
+    """
+    if request.method in ('GET', 'HEAD', 'OPTIONS'):
+        return None
+    if request.headers.get('Sec-Fetch-Site') == 'cross-site':
+        return 'Cross-origin request rejected', 403
+    source = request.headers.get('Origin', request.headers.get('Referer'))
+    if source is not None:
+        try:
+            origin = urlsplit(source)
+            target = urlsplit(request.host_url)
+            if 'Origin' not in request.headers and source.startswith('/') and not source.startswith('//'):
+                return None
+            if (origin.scheme, origin.hostname, origin.port or (443 if origin.scheme == 'https' else 80)) == (
+                target.scheme, target.hostname, target.port or (443 if target.scheme == 'https' else 80)
+            ):
+                return None
+        except ValueError:
+            pass
+        return 'Cross-origin request rejected', 403
 
 # add background job tracking
 background_jobs: Dict[str, Any] = {}
@@ -563,7 +591,9 @@ def api_sites():
 def settings_update():
     save_settings(parse_settings_form(request.form))
     flash('Settings saved.', 'success')
-    return redirect(request.referrer or url_for('index'))
+    # Only use a local path, even if a client supplies a forged Referer.
+    referrer = urlsplit(request.referrer or url_for('index'))
+    return redirect('/' + referrer.path.lstrip('/'))
 
 
 @app.route('/history')

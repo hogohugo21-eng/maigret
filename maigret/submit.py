@@ -3,6 +3,7 @@ import json
 import re
 import os
 import logging
+import ssl
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
@@ -52,10 +53,8 @@ class Submitter:
             else:
                 cookie_jar = import_aiohttp_cookies(args.cookie_file)
 
-        ssl_context = __import__('ssl').create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = __import__('ssl').CERT_NONE
-        connector = ProxyConnector.from_url(proxy) if proxy else TCPConnector(ssl=ssl_context)
+        ssl_context = ssl.create_default_context()
+        connector = ProxyConnector.from_url(proxy, ssl=ssl_context) if proxy else TCPConnector(ssl=ssl_context)
         self.session = ClientSession(
             connector=connector, trust_env=True, cookie_jar=cookie_jar
         )

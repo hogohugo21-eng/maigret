@@ -565,14 +565,23 @@
                 siteHiddenInput.value = Array.from(selectedSites).join(',');
             }
 
+            function renderSite(site) {
+                const siteElement = document.createElement('span');
+                siteElement.className = 'selected-site';
+                siteElement.textContent = site;
+                const removeButton = document.createElement('span');
+                removeButton.className = 'remove-site';
+                removeButton.dataset.site = site;
+                removeButton.textContent = '\u00d7';
+                siteElement.appendChild(removeButton);
+                selectedSitesContainer.appendChild(siteElement);
+            }
+
             function addSite(site) {
                 if (site && !selectedSites.has(site)) {
                     selectedSites.add(site);
                     updateSiteHiddenInput();
-                    const siteElement = document.createElement('span');
-                    siteElement.className = 'selected-site';
-                    siteElement.innerHTML = `${site}<span class="remove-site" data-site="${site}">&times;</span>`;
-                    selectedSitesContainer.appendChild(siteElement);
+                    renderSite(site);
                 }
             }
 
@@ -584,12 +593,7 @@
                 });
             }
 
-            initialSites.forEach(site => {
-                const siteElement = document.createElement('span');
-                siteElement.className = 'selected-site';
-                siteElement.innerHTML = `${site}<span class="remove-site" data-site="${site}">&times;</span>`;
-                selectedSitesContainer.appendChild(siteElement);
-            });
+            initialSites.forEach(renderSite);
 
             document.getElementById('settingsModal').addEventListener('show.bs.modal', function () {
                 if (sitesLoaded) return;
