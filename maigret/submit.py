@@ -56,7 +56,7 @@ class Submitter:
         ssl_context = ssl.create_default_context()
         connector = ProxyConnector.from_url(proxy, ssl=ssl_context) if proxy else TCPConnector(ssl=ssl_context)
         self.session = ClientSession(
-            connector=connector, trust_env=True, cookie_jar=cookie_jar
+            connector=connector, trust_env=False, cookie_jar=cookie_jar
         )
 
     async def close(self):

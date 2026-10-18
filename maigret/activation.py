@@ -4,9 +4,11 @@ import os.path as path
 import re
 from http.cookiejar import MozillaCookieJar
 from http.cookies import Morsel
+from email.utils import formatdate
 from typing import Dict
 
 from aiohttp import ClientSession, CookieJar
+from yarl import URL
 
 from .db_updater import MAIGRET_HOME
 
@@ -17,7 +19,7 @@ class ParsingActivator:
         headers = dict(site.headers)
         headers.pop("x-guest-token", None)
 
-        async with ClientSession(trust_env=True) as session:
+        async with ClientSession(trust_env=False) as session:
             async with session.post(
                 site.activation["url"],
                 headers=headers,
@@ -33,7 +35,7 @@ class ParsingActivator:
         headers = dict(site.headers)
         headers.pop("Authorization", None)
 
-        async with ClientSession(trust_env=True) as session:
+        async with ClientSession(trust_env=False) as session:
             async with session.get(
                 site.activation["url"],
                 headers=headers,
@@ -105,7 +107,7 @@ class ParsingActivator:
             hdrs["time"] = t
             hdrs["sign"] = sg
             hdrs.pop("cookie", None)
-            async with ClientSession(trust_env=True) as session:
+            async with ClientSession(trust_env=False) as session:
                 async with session.get(
                     init_url,
                     headers=hdrs,
@@ -136,7 +138,7 @@ class ParsingActivator:
             k: v for k, v in site.headers.items()
             if k.lower() not in ("authorization", "x-pm-uid")
         }
-        async with ClientSession(trust_env=True) as session:
+        async with ClientSession(trust_env=False) as session:
             async with session.post(
                 site.activation["url"],
                 headers=headers,
@@ -165,7 +167,7 @@ class ParsingActivator:
         headers.pop("Cookie", None)
         timeout = kwargs.get("timeout")
 
-        async with ClientSession(trust_env=True) as session:
+        async with ClientSession(trust_env=False) as session:
             async with session.post(
                 site.activation["url"],
                 headers=headers,
@@ -190,21 +192,28 @@ def import_aiohttp_cookies(cookiestxt_filename):
 
     cookies = CookieJar()
 
-    cookies_list = []
     # Iterate the jar itself rather than its internal {domain: {path: {name}}}
     # mapping: picking a single path bucket per domain silently dropped every
     # cookie stored under the domain's other paths.
     for cookie in cookies_obj:
+        # Some browser exporters use zero for session cookies.
+        if cookie.expires and cookie.is_expired():
+            continue
         c: Morsel = Morsel()
         # A valueless cookie ("name" with no "=value") parses as value None,
         # which used to reach the wire as the literal string "None".
         value = cookie.value or ""
         c.set(cookie.name, value, value)
-        c["domain"] = cookie.domain
+        c["domain"] = cookie.domain if cookie.domain_specified else ''
         c["path"] = cookie.path
-        cookies_list.append((cookie.name, c))
-
-    cookies.update_cookies(cookies_list)
+        c["secure"] = cookie.secure
+        if cookie.expires:
+            c["expires"] = formatdate(cookie.expires, usegmt=True)
+        origin = URL.build(
+            scheme='https' if cookie.secure else 'http',
+            host=cookie.domain.lstrip('.'), path=cookie.path or '/',
+        )
+        cookies.update_cookies([(cookie.name, c)], response_url=origin)
 
     return cookies
 

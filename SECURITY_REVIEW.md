@@ -2,6 +2,33 @@
 
 Baseline: `eaf820666d15bfd545129f3223e2261c27191e74`.
 
+## Follow-up privacy review — 2026-10-18
+
+Local fake-credential tests demonstrated automatic .netrc Authorization headers
+in account checks and database downloads. Project-owned aiohttp sessions now
+disable trust_env; requests downloads use a shared session factory with implicit
+authentication/environment proxies disabled. Explicit proxy arguments remain
+supported. Activation sessions follow the same policy. This is a compatibility
+change: environment proxy and requests CA-bundle variables are no longer used on
+these paths. Dependencies' internal networking is not comprehensively audited.
+
+Cookie import now preserves Secure and host-only scope, skips expired cookies
+and retains expiration for later filtering. Exporter timestamp zero remains a
+session-cookie convention. Regression cases reproduced plaintext/subdomain cookie
+disclosure and revival of expired cookies using only synthetic data.
+
+The local web UI now trusts only localhost/127.0.0.1/IPv6 loopback Hosts by default.
+This narrows DNS-rebinding exposure but is not authentication. Standard HTML
+reports no longer auto-fetch CDN scripts, CSS or profile images; they contain
+local styles, restrictive CSP and no-referrer policy. Graph reports are a separate
+format and are not covered by this HTML-template change.
+
+Validation: 326 passed, 1 skipped, 16 deselected in the relevant Maigret suite.
+Two previously confirmed baseline Windows-only failures (POSIX file mode and
+slash-specific path assertion) were explicitly deselected, along with slow tests.
+The seven new privacy regression cases passed after reproducing the issues.
+No actual user credentials, browser cookies or private documents were accessed.
+
 ## Changes and evidence
 
 - Restore certificate-chain and hostname verification in the account checker and site submitter. Pass the validating context to both direct and explicit proxy connectors. Eight real loopback HTTPS tests cover trusted, untrusted, expired and wrong-host certificates for both clients; six negative cases failed before the fix. Proxy connectors share the context, but a live proxy tunnel was not exercised.

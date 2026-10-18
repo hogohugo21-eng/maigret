@@ -208,7 +208,7 @@ async def test_vimeo_activation_uses_aiohttp(monkeypatch):
     assert captured["url"] == "https://vimeo.test/viewer"
     assert captured["headers"] == {"User-Agent": "test"}
     assert captured["timeout"] == 7
-    assert captured["session_kwargs"] == {"trust_env": True}
+    assert captured["session_kwargs"] == {"trust_env": False}
     assert site.headers["Authorization"] == "jwt fresh"
 
 
@@ -272,7 +272,7 @@ async def test_onlyfans_fetches_init_cookie_when_missing(monkeypatch):
     # init request made
     assert captured["url"] == site.activation["url"]
     assert captured["timeout"] == 15
-    assert captured["session_kwargs"] == {"trust_env": True}
+    assert captured["session_kwargs"] == {"trust_env": False}
     # headers passed to init include freshly generated time/sign
     assert "time" in captured["headers"]
     assert captured["headers"]["sign"].startswith("57203:")

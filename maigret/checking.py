@@ -346,7 +346,7 @@ class SimpleAiohttpChecker(CheckerBase):
 
         async with ClientSession(
             connector=connector,
-            trust_env=True,
+            trust_env=False,
             cookie_jar=self.cookie_jar if self.cookie_jar else None,
         ) as session:
             html_text, status_code, error = await self._make_request(
@@ -427,7 +427,7 @@ class CurlCffiChecker(CheckerBase):
         pass
 
     async def check(self) -> Tuple[Optional[str], int, Optional[CheckError]]:
-        session_kwargs = {}
+        session_kwargs = {'trust_env': False}
         if self.proxy:
             session_kwargs['proxies'] = {'http': self.proxy, 'https': self.proxy}
 

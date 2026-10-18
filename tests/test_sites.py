@@ -597,7 +597,7 @@ class _FakeResponse:
 
 
 def _capture_requests_get(monkeypatch):
-    import requests
+    from maigret import network as requests
 
     calls = []
 
@@ -609,7 +609,7 @@ def _capture_requests_get(monkeypatch):
     return calls
 
 
-def test_load_from_http_without_proxy_leaves_environment_in_charge(monkeypatch):
+def test_load_from_http_without_explicit_proxy(monkeypatch):
     calls = _capture_requests_get(monkeypatch)
 
     db = MaigretDatabase().load_from_path("https://example.com/data.json")

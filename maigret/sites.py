@@ -18,7 +18,7 @@ def _requests_proxies(proxy: Optional[str]) -> Optional[Dict[str, str]]:
     With PySocks, requests resolves hostnames locally for socks5:// and through
     the proxy only for socks5h://. Rewriting the scheme keeps the database
     host's DNS lookup inside the tunnel too, which is what --proxy promises.
-    None leaves requests reading HTTP_PROXY / HTTPS_PROXY as before.
+    None makes a direct connection without environment credentials or proxies.
     """
     if not proxy:
         return None
@@ -618,7 +618,7 @@ class MaigretDatabase:
         if not is_url_valid:
             raise FileNotFoundError(f"Invalid data file URL '{url}'.")
 
-        import requests
+        from . import network as requests
 
         try:
             response = requests.get(

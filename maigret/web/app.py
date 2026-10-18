@@ -27,6 +27,7 @@ from maigret.sites import MaigretDatabase
 from maigret.report import generate_report_context
 
 app = Flask(__name__)
+app.config['TRUSTED_HOSTS'] = ['localhost', '127.0.0.1', '[::1]']
 # Use environment variable for secret key, generate random one if not set
 app.secret_key = os.getenv('FLASK_SECRET_KEY', os.urandom(24).hex())
 

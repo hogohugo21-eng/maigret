@@ -1,11 +1,18 @@
 <html>
 <head>
     <meta charset="utf-8" />
+    <meta name="referrer" content="no-referrer" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'" />
 </head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no" />
 <title>{{ username }} -- Maigret username search report</title>
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem auto; max-width: 1100px; padding: 0 1rem; color: #222; }
+    a { color: #075ba7; overflow-wrap: anywhere; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border-bottom: 1px solid #ddd; padding: .4rem; text-align: left; }
+    .card { border: 1px solid #ddd; border-radius: .4rem; padding: 1rem; margin: 1rem 0; }
+    .text-muted { color: #666; }
     .table td, .table th {
         padding: .4rem;
     }
@@ -68,17 +75,16 @@
         <div class="row-mb">
             <div class="col-md">
                 <div class="card flex-md-row mb-4 box-shadow h-md-250">
-                    <img class="card-img-right flex-auto d-md-block" alt="Photo" style="width: 200px; height: 200px; object-fit: scale-down;" src="{{ v.status and v.status.ids_data and v.status.ids_data.image or 'https://i.imgur.com/040fmbw.png' }}" data-holder-rendered="true">
                     <div class="card-body d-flex flex-column align-items-start" style="padding-top: 0;">
                     <h3 class="mb-0" style="padding-top: 1rem;">
-                        <a class="text-dark" href="{{ v.url_main }}" target="_blank">{{ k }}</a>
+                        <a class="text-dark" href="{{ v.url_main }}" target="_blank" rel="noopener noreferrer">{{ k }}</a>
                     </h3>
                     {% if v.status.tags %}
                         <div class="mb-1 text-muted">Tags: {{ v.status.tags | join(', ') }}</div>
                     {% endif %}
                     <p class="card-text">
-                        <a href="{{ v.url_user }}" target="_blank">{{ v.url_user }}</a>
-                        <span class="text-muted small">(<a href="https://web.archive.org/web/*/{{ v.url_user }}" target="_blank">web.archive.org</a>, <a href="https://archive.is/newest/{{ v.url_user }}" target="_blank">archive.is</a>)</span>
+                        <a href="{{ v.url_user }}" target="_blank" rel="noopener noreferrer">{{ v.url_user }}</a>
+                        <span class="text-muted small">(<a href="https://web.archive.org/web/*/{{ v.url_user }}" target="_blank" rel="noopener noreferrer">web.archive.org</a>, <a href="https://archive.is/newest/{{ v.url_user }}" target="_blank" rel="noopener noreferrer">archive.is</a>)</span>
                     </p>
                     {% if v.ids_data %}
                     <table class="table table-striped">
@@ -104,7 +110,4 @@
             {% endfor %}
         {% endfor %}
     </div>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 </html>
