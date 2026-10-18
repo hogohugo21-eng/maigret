@@ -332,25 +332,21 @@ class SimpleAiohttpChecker(CheckerBase):
     async def check(self) -> Tuple[Optional[str], int, Optional[CheckError]]:
         from aiohttp_socks import ProxyConnector
 
-        # Use a real SSL context instead of ssl=False to avoid TLS fingerprinting
-        # blocks by Cloudflare and similar WAFs. Certificate verification is
-        # disabled to handle sites with invalid/expired certs.
+        # Authenticate the server, including when connecting through a proxy.
         ssl_context = ssl.create_default_context()
-        ssl_context.check_hostname = False
-        ssl_context.verify_mode = ssl.CERT_NONE
 
         # Build the TCPConnector with an explicit resolver when 'threaded' is
         # requested. ProxyConnector takes its own resolver kwarg too, so apply
         # the same setting on both code paths.
         resolver = ThreadedResolver() if self.dns_resolver == 'threaded' else None
         if self.proxy:
-            connector = ProxyConnector.from_url(self.proxy, resolver=resolver) if resolver else ProxyConnector.from_url(self.proxy)
+            connector = ProxyConnector.from_url(self.proxy, ssl=ssl_context, resolver=resolver) if resolver else ProxyConnector.from_url(self.proxy, ssl=ssl_context)
         else:
             connector = TCPConnector(ssl=ssl_context, resolver=resolver) if resolver else TCPConnector(ssl=ssl_context)
 
         async with ClientSession(
             connector=connector,
-            trust_env=True,
+            trust_env=False,
             cookie_jar=self.cookie_jar if self.cookie_jar else None,
         ) as session:
             html_text, status_code, error = await self._make_request(
@@ -431,7 +427,7 @@ class CurlCffiChecker(CheckerBase):
         pass
 
     async def check(self) -> Tuple[Optional[str], int, Optional[CheckError]]:
-        session_kwargs = {}
+        session_kwargs = {'trust_env': False}
         if self.proxy:
             session_kwargs['proxies'] = {'http': self.proxy, 'https': self.proxy}
 

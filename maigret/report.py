@@ -2,16 +2,13 @@ import ast
 import csv
 import html
 import io
-import ipaddress
 import json
 import logging
 import os
-import socket
 import tempfile
 import zipfile
 from datetime import datetime
 from typing import Dict, Any
-from urllib.parse import urlparse
 from xml.etree import ElementTree
 
 import xmind  # type: ignore[import-untyped]
@@ -90,64 +87,18 @@ PDF_EXTRA_HINT = (
     "Install it with: pip install 'maigret[pdf]'"
 )
 
-# 1x1 transparent PNG substituted for any report image URL that isn't a safe
-# public http(s) resource (see _is_safe_report_image_url).
+# 1x1 transparent PNG substituted for untrusted report resources.
 _BLANK_IMAGE_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), "resources", "blank.png"
 )
 
 
-def _is_safe_report_image_url(uri) -> bool:
-    """Whether ``uri`` is a public http(s) image safe to fetch during PDF render.
-
-    Report images come from scraped profile data (``ids_data['image']``), which
-    is attacker-influenced. xhtml2pdf resolves ``<img src>`` while building the
-    PDF, so an intranet or cloud-metadata URL is a request made by the machine
-    running maigret (server-side in the web UI). A src with no scheme at all is
-    worse than a URL: xhtml2pdf falls back to treating it as a local path and
-    opens it. Only allow http(s) hosts that resolve to public addresses.
-    """
-    if not isinstance(uri, str):
-        return False
-    parsed = urlparse(uri.strip())
-    if parsed.scheme not in ("http", "https"):
-        return False
-    host = parsed.hostname
-    if not host:
-        return False
-    try:
-        infos = socket.getaddrinfo(host, None)
-    except (socket.gaierror, UnicodeError, ValueError):
-        return False
-    if not infos:
-        return False
-    for info in infos:
-        try:
-            ip = ipaddress.ip_address(info[4][0])
-        except ValueError:
-            return False
-        mapped = getattr(ip, "ipv4_mapped", None)
-        if mapped is not None:
-            ip = mapped
-        # is_global is False for private, loopback, link-local, unspecified and
-        # CGNAT (100.64.0.0/10) addresses. Multicast and reserved ranges are
-        # still is_global on CPython, so they stay explicit: 64:ff9b::/96 is
-        # reserved but routes to IPv4 through a NAT64 gateway.
-        if not ip.is_global or ip.is_multicast or ip.is_reserved:
-            return False
-    return True
-
-
 def _pdf_report_link_callback(uri, rel):
-    """xhtml2pdf resource resolver: let safe public images through, and divert
-    everything else to a local blank placeholder so no fetch/read happens.
+    """Never delegate profile-controlled resources to the PDF downloader.
 
-    Returning a local path (rather than raising) keeps report generation working
-    even when a scanned profile carries a hostile image URL — a raise would abort
-    the whole PDF.
+    A DNS precheck cannot constrain redirects or DNS rebinding during a later
+    fetch. Use only the bundled placeholder; never open supplied local paths.
     """
-    if _is_safe_report_image_url(uri):
-        return uri
     return _BLANK_IMAGE_PATH
 
 
@@ -792,6 +743,12 @@ def generate_report_context(username_results: list):
     }
 
 
+def _spreadsheet_text(value):
+    if isinstance(value, str) and value.lstrip().startswith(('=', '+', '-', '@')):
+        return "'" + value
+    return value
+
+
 def generate_csv_report(username: str, results: dict, csvfile):
     writer = csv.writer(csvfile)
     writer.writerow(
@@ -812,7 +769,7 @@ def generate_csv_report(username: str, results: dict, csvfile):
         if result_status:
             status = str(result_status.status)
         writer.writerow(
-            [
+            [_spreadsheet_text(value) for value in [
                 username,
                 site,
                 results[site].get("url_main", ""),
@@ -820,7 +777,7 @@ def generate_csv_report(username: str, results: dict, csvfile):
                 status,
                 results[site].get("http_status", 0),
                 error_reason,
-            ]
+            ]]
         )
 
 

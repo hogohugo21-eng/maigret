@@ -14,7 +14,7 @@ import tempfile
 from datetime import datetime, timezone
 from typing import Optional
 
-import requests
+from . import network as requests
 from colorama import Fore, Style
 
 from .__version__ import __version__
@@ -100,8 +100,7 @@ def _needs_check(state: dict, interval_hours: int) -> bool:
 def _proxies(proxy: Optional[str]) -> Optional[dict]:
     """Build the requests proxy mapping for --proxy, or None when it is unset.
 
-    None keeps the previous behavior of letting requests read HTTP_PROXY /
-    HTTPS_PROXY from the environment. A mapping always wins over those, so an
+    None makes a direct connection without environment credentials or proxies. A mapping always wins over those, so an
     explicit --proxy cannot be bypassed by NO_PROXY.
 
     When the proxy is unreachable requests raises, the caller reports the
